@@ -40,15 +40,15 @@ def do_enrollment(window):
 
         # --- COLLECT AUDIO FILES ---
         if not os.path.exists(AUDIO_DIR):
-            window.write_event_value('-ENROLL-UPDATE-', f"⚠️ Folder '{AUDIO_DIR}' not found.")
+            window.write_event_value('-ENROLL-UPDATE-', f" Folder '{AUDIO_DIR}' not found.")
             return
 
         wav_files = [f for f in os.listdir(AUDIO_DIR) if f.endswith(".wav")]
         if not wav_files:
-            window.write_event_value('-ENROLL-UPDATE-', f"⚠️ No .wav files found in '{AUDIO_DIR}'.")
+            window.write_event_value('-ENROLL-UPDATE-', f" No .wav files found in '{AUDIO_DIR}'.")
             return
 
-        window.write_event_value('-ENROLL-UPDATE-', f"🧩 Found {len(wav_files)} audio files.")
+        window.write_event_value('-ENROLL-UPDATE-', f" Found {len(wav_files)} audio files.")
 
         # --- LOAD ENROLLMENT MODEL ---
         # Note: This model is already loaded in the main thread,
@@ -89,7 +89,7 @@ def do_enrollment(window):
         final_embedding = np.mean(embeddings, axis=0)
         np.save(OUTPUT_FILE, final_embedding)
 
-        window.write_event_value('-ENROLL-UPDATE-', "\n✅ Enrollment complete!")
+        window.write_event_value('-ENROLL-UPDATE-', "\n Enrollment complete!")
         window.write_event_value('-ENROLL-UPDATE-', f"Saved master voiceprint to '{OUTPUT_FILE}'")
         window.write_event_value('-ENROLL-FINISHED-', None)
     except Exception as e:
@@ -143,7 +143,7 @@ def verification_loop(window, stop_event, model, asr_model, target_voiceprint, d
     """
     try:
         while not stop_event.is_set():
-            window.write_event_value('-VERIFY-STATUS-', ("🎙️ Listening...", "cyan"))
+            window.write_event_value('-VERIFY-STATUS-', (" Listening...", "cyan"))
 
             myrecording = sd.rec(
                 int(DURATION * SAMPLE_RATE),
@@ -166,7 +166,7 @@ def verification_loop(window, stop_event, model, asr_model, target_voiceprint, d
             window.write_event_value('-VERIFY-RESULT-', (score, status, text))
 
     except Exception as e:
-        window.write_event_value('-VERIFY-STATUS-', (f"❌ Error: {e}", "red"))
+        window.write_event_value('-VERIFY-STATUS-', (f" Error: {e}", "red"))
 
     # Tell the UI thread that we have stopped
     window.write_event_value('-VERIFY-STOPPED-', None)
@@ -234,10 +234,10 @@ def main_gui():
         target_voiceprint = np.load(OUTPUT_FILE)
         target_voiceprint = target_voiceprint.reshape(1, -1)
 
-        window["-STATUS-"].update("✅ Ready to Start.", text_color="green")
+        window["-STATUS-"].update(" Ready to Start.", text_color="green")
 
     except FileNotFoundError:
-        window["-STATUS-"].update(f"❌ '{OUTPUT_FILE}' not found. Please run enrollment.", text_color="red")
+        window["-STATUS-"].update(f" '{OUTPUT_FILE}' not found. Please run enrollment.", text_color="red")
         target_voiceprint = None
     except Exception as e:
         # Close the main loading window first
@@ -316,7 +316,7 @@ def main_gui():
             score, status, text = values[event]
 
             if status == "SILENCE":
-                window["-STATUS-"].update("😴 Detected silence...", text_color="grey")
+                window["-STATUS-"].update(" Detected silence...", text_color="grey")
                 window["-SCORE-"].update("0.0000")
                 window["-HEARD-"].update("...")
                 continue
@@ -330,7 +330,7 @@ def main_gui():
 
             # --- The Decision ---
             if score > VERIFICATION_THRESHOLD:
-                window["-STATUS-"].update(f"✅ ACCESS GRANTED!", text_color="lightgreen")
+                window["-STATUS-"].update(f" ACCESS GRANTED!", text_color="lightgreen")
                 trigger_unlock_action()
 
                 # Optional: Stop listening after success
@@ -339,9 +339,9 @@ def main_gui():
                 # window["-STOP-"].update(disabled=True)
 
             elif score < MIN_VOICE_SCORE:
-                window["-STATUS-"].update(f"❌ LOW CONFIDENCE", text_color="yellow")
+                window["-STATUS-"].update(f" LOW CONFIDENCE", text_color="yellow")
             else:
-                window["-STATUS-"].update(f"❌ ACCESS DENIED (Impostor)", text_color="red")
+                window["-STATUS-"].update(f" ACCESS DENIED (Impostor)", text_color="red")
 
         elif event == "-VERIFY-STOPPED-":
             window["-STATUS-"].update("Idle", text_color="grey")
@@ -354,4 +354,5 @@ def main_gui():
 
 # --- Run the App ---
 if __name__ == "__main__":
+
     main_gui()
